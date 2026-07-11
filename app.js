@@ -118,12 +118,20 @@ async function addCustomer(name){
   render();
 }
 
-function handleScanCodeInput(codeStr){
-  const match = findByCode(codeStr);
-  if(!match){ toast("لم يتم العثور على عميل بهذا الكود"); return; }
-  if(match.stamps>=THRESHOLD){ toast(`${match.name}: المكافأة جاهزة، استبدلها أولاً`); S.selectedId=match.id; render(); return; }
-  addStampTo(match.id);
-  S.selectedId = match.id;
+async function handleScanCodeInput(codeStr){
+  const code = (codeStr||"").trim();
+  if(!code){ toast("أدخل كود صحيح"); return; }
+  const { data, error } = await window.supabase
+    .from("customers")
+    .select("*")
+    .ilike("code", code)
+    .maybeSingle();
+  if(error || !data){ toast("لم يتم العثور على عميل بهذا الكود"); return; }
+  const existing = S.customers.find(c=>c.id===data.id);
+  if(existing){ Object.assign(existing, data); } else { S.customers.push(data); }
+  if(data.stamps>=THRESHOLD){ toast(`${data.name}: المكافأة جاهزة، استبدلها أولاً`); S.selectedId=data.id; render(); return; }
+  await addStampTo(data.id);
+  S.selectedId = data.id;
   render();
 }
 
@@ -294,7 +302,10 @@ function render(){
       </div>
 
       <div class="card">
-        <div style="font-weight:700;font-size:14px;margin-bottom:8px;">اختر عميل لعرض بطاقته</div>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+          <div style="font-weight:700;font-size:14px;">اختر عميل لعرض بطاقته</div>
+          <button class="btn-outline" data-action="refreshList">🔄 تحديث القائمة</button>
+        </div>
         ${S.customers.length ? `
         <select id="custSelect" data-action="selectCustomer" style="width:100%;margin-bottom:10px;">
           ${S.customers.map(c=>`<option value="${c.id}" ${c.id===S.selectedId?'selected':''}>${c.name} — ${c.code}</option>`).join("")}
@@ -414,6 +425,7 @@ function bindEvents(){
         case "removeStamp": removeStampFrom(el.dataset.id); break;
         case "addStamp": addStampTo(el.dataset.id); break;
         case "redeem": redeemReward(el.dataset.id); break;
+        case "refreshList": loadCustomers().then(()=>toast("تم تحديث القائمة")); break;
         case "sendOtp": sendOtp(document.getElementById("phoneField").value); break;
         case "verifyOtp": {
           verifyOtp(document.getElementById("otpField").value);
