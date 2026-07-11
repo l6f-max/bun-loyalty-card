@@ -3,7 +3,8 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>بُن — بطاقتي</title>
+<title>بُن — لوحة الكاشير</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jsQR/1.4.0/jsQR.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.js"></script>
 <script type="module">
   import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
@@ -16,7 +17,7 @@
   window.supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
   window.dispatchEvent(new Event("supabase-ready"));
 </script>
-<script>window.FIXED_VIEW = "customer";</script>
+<script>window.FIXED_VIEW = "cashier";</script>
 <style>
   :root{
     --kraft:#E7D9BE; --kraftDark:#CBB68C; --paper:#F3EAD6;
@@ -40,24 +41,26 @@
   .stat .val{font-size:17px;font-weight:800;}
   .stat .lbl{font-size:11px;color:var(--textMuted);}
   input[type=text],input[type=tel]{border:1px solid var(--kraftDark);background:#fff;border-radius:8px;padding:9px 12px;font-size:14px;outline:none;font-family:inherit;}
+  select{border:1px solid var(--kraftDark);background:#fff;border-radius:8px;padding:9px 12px;font-size:14px;font-family:inherit;}
   button{font-family:inherit;cursor:pointer;border:none;}
   button:disabled{opacity:.5;cursor:not-allowed;}
   .btn-dark{background:var(--espresso);color:var(--kraft);border-radius:8px;padding:9px 14px;font-size:13px;font-weight:700;}
   .btn-ink{background:var(--ink);color:#fff;border-radius:8px;padding:9px 14px;font-size:13px;font-weight:700;}
   .btn-gold{background:var(--gold);color:#fff;border-radius:8px;padding:7px 12px;font-size:12px;font-weight:700;}
+  .btn-outline{background:var(--paper);color:var(--ink);border:1px solid var(--ink);border-radius:8px;padding:7px 10px;font-size:12px;font-weight:700;}
+  .btn-outline:disabled{opacity:.35;cursor:not-allowed;}
   .stampgrid{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;}
   .slot{position:relative;aspect-ratio:1;border-radius:50%;border:2px dashed var(--kraftDark);background:var(--paper);display:flex;align-items:center;justify-content:center;font-size:11px;color:var(--kraftDark);font-weight:600;}
   .stamp{width:78%;height:78%;border-radius:50%;border:3px solid var(--ink);display:flex;align-items:center;justify-content:center;color:var(--ink);transform:rotate(-8deg);font-size:16px;box-shadow:0 0 0 2px var(--paper) inset;}
   .stamp.new{animation:slam .5s ease-out;}
   @keyframes slam{0%{transform:scale(2) rotate(-25deg);opacity:0;}60%{transform:scale(.92) rotate(-6deg);opacity:1;}100%{transform:scale(1) rotate(-8deg);opacity:1;}}
   .toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--espresso);color:var(--kraft);padding:9px 16px;border-radius:999px;font-size:13px;font-weight:700;box-shadow:0 6px 20px rgba(0,0,0,.25);z-index:50;}
-  .qrbox{background:#fff;border:3px solid var(--espresso);border-radius:8px;padding:10px;display:inline-flex;}
-  .qrbox svg{display:block;}
   .center{text-align:center;}
   .muted{color:var(--textMuted);font-size:12px;}
-  .code-pill{font-family:ui-monospace,monospace;letter-spacing:2px;background:var(--kraft);color:var(--espresso);padding:4px 12px;border-radius:6px;font-size:12px;}
-  .link-btn{background:none;border:none;text-decoration:underline;font-size:12px;color:var(--textMuted);padding:0;}
-  label.chk{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--textMuted);justify-content:center;}
+  .scanner-wrap{position:relative;border-radius:12px;overflow:hidden;background:#000;}
+  .scanner-wrap video{width:100%;display:block;}
+  .scanner-frame{position:absolute;inset:15%;border:2px solid var(--gold);border-radius:12px;pointer-events:none;}
+  .scan-msg{background:var(--paper);border:1px solid var(--kraftDark);border-radius:10px;padding:10px 12px;font-size:12px;color:var(--textMuted);}
   .loading{padding:40px 20px;text-align:center;color:var(--textMuted);}
 </style>
 </head>
