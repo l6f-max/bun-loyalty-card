@@ -30,7 +30,11 @@ function toast(msg){
   S.toast = msg;
   render();
   clearTimeout(toast._t);
-  toast._t = setTimeout(()=>{ S.toast=null; render(); }, 2400);
+  toast._t = setTimeout(()=>{
+    S.toast = null;
+    const el = document.getElementById("toastEl");
+    if(el) el.remove();
+  }, 2400);
 }
 
 function findByCode(code){
@@ -193,24 +197,28 @@ function sendOtp(phoneVal){
 }
 async function verifyOtp(codeVal){
   if((codeVal||"").trim() !== S.otpSent){ toast("الكود غير صحيح، حاول مرة أخرى"); return; }
-  const phone = S._phone;
-  let existing = S.customers.find(c=>c.phone===phone);
-  let id;
-  if(existing){
-    id = existing.id;
-  } else {
-    const created = await insertCustomer({ name:"عميل "+phone.slice(-4), phone, code:makeCode(), stamps:0, rewards:0, total_stamps:0 });
-    if(!created) return;
-    S.customers.push(created);
-    id = created.id;
+  try{
+    const phone = S._phone;
+    let existing = S.customers.find(c=>c.phone===phone);
+    let id;
+    if(existing){
+      id = existing.id;
+    } else {
+      const created = await insertCustomer({ name:"عميل "+phone.slice(-4), phone, code:makeCode(), stamps:0, rewards:0, total_stamps:0 });
+      if(!created) return;
+      S.customers.push(created);
+      id = created.id;
+    }
+    S.session = id;
+    S.selectedId = id;
+    window.storage.set("loyalty-device-session", JSON.stringify({customerId:id}), false).catch(()=>{});
+    toast(existing ? `أهلاً بعودتك ${existing.name}` : "تم إنشاء بطاقتك بنجاح");
+    S.loginStep = "phone";
+    S.otpSent = null;
+    render();
+  }catch(err){
+    toast("حدث خطأ غير متوقع: " + (err && err.message ? err.message : "حاول مرة أخرى"));
   }
-  S.session = id;
-  S.selectedId = id;
-  window.storage.set("loyalty-device-session", JSON.stringify({customerId:id}), false).catch(()=>{});
-  toast(existing ? `أهلاً بعودتك ${existing.name}` : "تم إنشاء بطاقتك بنجاح");
-  S.loginStep = "phone";
-  S.otpSent = null;
-  render();
 }
 function logout(){
   S.session = null;
@@ -387,7 +395,7 @@ function render(){
     </div>`;
   }
 
-  html += S.toast ? `<div class="toast">✓ ${S.toast}</div>` : "";
+  html += S.toast ? `<div class="toast" id="toastEl">✓ ${S.toast}</div>` : "";
 
   document.getElementById("app").innerHTML = html;
   bindEvents();
