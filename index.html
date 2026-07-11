@@ -1,0 +1,536 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>بُن — بطاقة الولاء الرقمية</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jsQR/1.4.0/jsQR.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.js"></script>
+<script type="module">
+  import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
+
+  // ====== إعدادات مشروعك على Supabase ======
+  const SUPABASE_URL = "https://zyujtsvxxeopdoplbabh.supabase.co";
+  const SUPABASE_KEY = "sb_publishable_P9KdoAMpdghZcMQAjopfpA_jj01ulZi";
+  // ==========================================
+
+  window.supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
+  window.dispatchEvent(new Event("supabase-ready"));
+</script>
+<style>
+  :root{
+    --kraft:#E7D9BE; --kraftDark:#CBB68C; --paper:#F3EAD6;
+    --espresso:#2C1D14; --ink:#9C3B2A; --gold:#B4841F;
+    --textDark:#2B1D14; --textMuted:#7A6A52;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--kraft);font-family:'Segoe UI',Tahoma,system-ui,sans-serif;color:var(--textDark);}
+  #app{max-width:420px;margin:0 auto;padding-bottom:40px;}
+  .header{background:var(--espresso);color:var(--kraft);padding:24px 20px 20px;position:relative;}
+  .header .title{display:flex;align-items:center;gap:8px;font-size:20px;font-weight:800;}
+  .header .tag{font-size:12px;opacity:.7;margin-top:2px;}
+  .perf{position:absolute;left:0;right:0;bottom:0;display:flex;justify-content:space-around;transform:translateY(50%);}
+  .perf span{width:10px;height:10px;border-radius:50%;background:var(--kraft);display:block;}
+  .tabs{display:flex;gap:8px;padding:20px 20px 8px;}
+  .tab{flex:1;border:1px solid var(--kraftDark);border-radius:8px;padding:9px;font-size:13px;font-weight:700;background:var(--paper);color:var(--textMuted);cursor:pointer;}
+  .tab.active{background:var(--espresso);color:var(--kraft);}
+  .section{padding:6px 20px 20px;display:flex;flex-direction:column;gap:14px;}
+  .card{background:var(--paper);border:1px solid var(--kraftDark);border-radius:12px;padding:16px;}
+  .row{display:flex;gap:8px;}
+  .stats{display:flex;gap:8px;flex-wrap:wrap;}
+  .stat{flex:1;min-width:120px;display:flex;align-items:center;gap:10px;background:var(--paper);border:1px solid var(--kraftDark);border-radius:12px;padding:10px 14px;}
+  .stat .ic{background:var(--espresso);color:var(--kraft);border-radius:50%;width:32px;height:32px;display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0;}
+  .stat .val{font-size:17px;font-weight:800;}
+  .stat .lbl{font-size:11px;color:var(--textMuted);}
+  input[type=text],input[type=tel]{border:1px solid var(--kraftDark);background:#fff;border-radius:8px;padding:9px 12px;font-size:14px;outline:none;font-family:inherit;}
+  select{border:1px solid var(--kraftDark);background:#fff;border-radius:8px;padding:9px 12px;font-size:14px;font-family:inherit;}
+  button{font-family:inherit;cursor:pointer;border:none;}
+  button:disabled{opacity:.5;cursor:not-allowed;}
+  .btn-dark{background:var(--espresso);color:var(--kraft);border-radius:8px;padding:9px 14px;font-size:13px;font-weight:700;}
+  .btn-ink{background:var(--ink);color:#fff;border-radius:8px;padding:9px 14px;font-size:13px;font-weight:700;}
+  .btn-gold{background:var(--gold);color:#fff;border-radius:8px;padding:7px 12px;font-size:12px;font-weight:700;}
+  .btn-outline{background:var(--paper);color:var(--ink);border:1px solid var(--ink);border-radius:8px;padding:7px 10px;font-size:12px;font-weight:700;}
+  .btn-outline:disabled{opacity:.35;cursor:not-allowed;}
+  .stampgrid{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;}
+  .slot{position:relative;aspect-ratio:1;border-radius:50%;border:2px dashed var(--kraftDark);background:var(--paper);display:flex;align-items:center;justify-content:center;font-size:11px;color:var(--kraftDark);font-weight:600;}
+  .stamp{width:78%;height:78%;border-radius:50%;border:3px solid var(--ink);display:flex;align-items:center;justify-content:center;color:var(--ink);transform:rotate(-8deg);font-size:16px;box-shadow:0 0 0 2px var(--paper) inset;}
+  .stamp.new{animation:slam .5s ease-out;}
+  @keyframes slam{0%{transform:scale(2) rotate(-25deg);opacity:0;}60%{transform:scale(.92) rotate(-6deg);opacity:1;}100%{transform:scale(1) rotate(-8deg);opacity:1;}}
+  .toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--espresso);color:var(--kraft);padding:9px 16px;border-radius:999px;font-size:13px;font-weight:700;box-shadow:0 6px 20px rgba(0,0,0,.25);z-index:50;}
+  .qrbox{background:#fff;border:3px solid var(--espresso);border-radius:8px;padding:10px;display:inline-flex;}
+  .qrbox svg{display:block;}
+  .center{text-align:center;}
+  .muted{color:var(--textMuted);font-size:12px;}
+  .code-pill{font-family:ui-monospace,monospace;letter-spacing:2px;background:var(--kraft);color:var(--espresso);padding:4px 12px;border-radius:6px;font-size:12px;}
+  .scanner-wrap{position:relative;border-radius:12px;overflow:hidden;background:#000;}
+  .scanner-wrap video{width:100%;display:block;}
+  .scanner-frame{position:absolute;inset:15%;border:2px solid var(--gold);border-radius:12px;pointer-events:none;}
+  .scan-msg{background:var(--paper);border:1px solid var(--kraftDark);border-radius:10px;padding:10px 12px;font-size:12px;color:var(--textMuted);}
+  .link-btn{background:none;border:none;text-decoration:underline;font-size:12px;color:var(--textMuted);padding:0;}
+  label.chk{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--textMuted);justify-content:center;}
+  .loading{padding:40px 20px;text-align:center;color:var(--textMuted);}
+</style>
+</head>
+<body>
+<div id="app"><div class="loading">جاري الاتصال بقاعدة البيانات...</div></div>
+<script>
+const THRESHOLD = 10;
+function makeCode(){
+  const chars="ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+  let out=""; for(let i=0;i<6;i++) out+=chars[Math.floor(Math.random()*chars.length)];
+  return out;
+}
+function normPhone(p){ return (p||"").trim().replace(/[^\d]/g,""); }
+
+let S = {
+  view: "cashier",
+  customers: [],
+  selectedId: null,
+  session: null,
+  loginStep: "phone",
+  otpSent: null,
+  scanning: false,
+  scanStatus: "",
+  justStampedId: null,
+  toast: null,
+  ready: false,
+  busy: false,
+  cashierPin: "",
+};
+
+let mediaStream = null;
+let rafId = null;
+let lastScanTime = 0;
+
+function toast(msg){
+  S.toast = msg;
+  render();
+  clearTimeout(toast._t);
+  toast._t = setTimeout(()=>{ S.toast=null; render(); }, 2400);
+}
+
+function findByCode(code){
+  return S.customers.find(c => c.code.toLowerCase() === (code||"").trim().toLowerCase());
+}
+function selected(){ return S.customers.find(c=>c.id===S.selectedId) || S.customers[0]; }
+
+// ---------- Supabase data layer ----------
+async function loadCustomers(){
+  const { data, error } = await window.supabase
+    .from("customers")
+    .select("*")
+    .order("created_at", { ascending: true });
+  if(error){
+    toast("خطأ بجلب البيانات: " + error.message);
+    return;
+  }
+  S.customers = data || [];
+  if(!S.selectedId && S.customers.length) S.selectedId = S.customers[0].id;
+  render();
+}
+
+async function updateCustomer(id, patch){
+  const { error } = await window.supabase.from("customers").update(patch).eq("id", id);
+  if(error) toast("خطأ بالتحديث: " + error.message);
+  return !error;
+}
+
+async function callCashierRpc(fnName, customerId){
+  if(!S.cashierPin || S.cashierPin.trim().length === 0){
+    toast("أدخل رمز الكاشير أولاً");
+    return null;
+  }
+  const { data, error } = await window.supabase.rpc(fnName, {
+    p_customer_id: customerId,
+    p_pin: S.cashierPin.trim(),
+  });
+  if(error){
+    toast(error.message || "رمز الكاشير غير صحيح");
+    return null;
+  }
+  return data;
+}
+
+async function insertCustomer(row){
+  const { data, error } = await window.supabase.from("customers").insert(row).select().single();
+  if(error){ toast("خطأ بالإضافة: " + error.message); return null; }
+  return data;
+}
+
+// ---------- actions ----------
+async function addStampTo(id, silent){
+  const c = S.customers.find(c=>c.id===id);
+  if(!c || c.stamps>=THRESHOLD) return false;
+  const updated = await callCashierRpc("add_stamp", id);
+  if(!updated) return false;
+  Object.assign(c, updated);
+  S.justStampedId = id;
+  render();
+  setTimeout(()=>{ S.justStampedId=null; render(); }, 600);
+  if(!silent) toast(`تمت إضافة طابع لـ ${c.name} ✓`);
+  return true;
+}
+async function removeStampFrom(id){
+  const c = S.customers.find(c=>c.id===id);
+  if(!c || c.stamps<=0) return;
+  const updated = await callCashierRpc("remove_stamp", id);
+  if(!updated) return;
+  Object.assign(c, updated);
+  render();
+  toast("تم حذف آخر طابع");
+}
+async function redeemReward(id){
+  const c = S.customers.find(c=>c.id===id);
+  if(!c || c.stamps<THRESHOLD) return;
+  const updated = await callCashierRpc("redeem_reward", id);
+  if(!updated) return;
+  Object.assign(c, updated);
+  render();
+  toast("تم استبدال المكافأة 🎉");
+}
+async function addCustomer(name){
+  name = (name||"").trim();
+  if(!name) return;
+  const row = { name, phone: null, code: makeCode(), stamps: 0, rewards: 0, total_stamps: 0 };
+  const created = await insertCustomer(row);
+  if(!created) return;
+  S.customers.push(created);
+  S.selectedId = created.id;
+  toast(`تمت إضافة العميل ${name}`);
+  render();
+}
+
+function handleScanCodeInput(codeStr){
+  const match = findByCode(codeStr);
+  if(!match){ toast("لم يتم العثور على عميل بهذا الكود"); return; }
+  if(match.stamps>=THRESHOLD){ toast(`${match.name}: المكافأة جاهزة، استبدلها أولاً`); S.selectedId=match.id; render(); return; }
+  addStampTo(match.id);
+  S.selectedId = match.id;
+  render();
+}
+
+// ---------- camera QR scanner ----------
+async function startScanner(){
+  S.scanStatus = "";
+  render();
+  try{
+    mediaStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
+  }catch(err){
+    S.scanStatus = "تعذّر فتح الكاميرا (قد تكون الصلاحية مرفوضة، أو أن هذه المعاينة لا تسمح بالوصول للكاميرا). جرّب فتح الرابط مباشرة في متصفح الجوال بدل معاينة المحادثة.";
+    S.scanning = false;
+    render();
+    return;
+  }
+  S.scanning = true;
+  render();
+  const video = document.getElementById("scanVideo");
+  video.srcObject = mediaStream;
+  await video.play();
+  const canvas = document.createElement("canvas");
+  const ctx = canvas.getContext("2d");
+  function tick(){
+    if(!S.scanning) return;
+    if(video.readyState === video.HAVE_ENOUGH_DATA){
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+      const imageData = ctx.getImageData(0,0,canvas.width,canvas.height);
+      const code = window.jsQR ? jsQR(imageData.data, imageData.width, imageData.height) : null;
+      const now = Date.now();
+      if(code && code.data && now - lastScanTime > 1800){
+        lastScanTime = now;
+        stopScanner();
+        handleScanCodeInput(code.data);
+        return;
+      }
+    }
+    rafId = requestAnimationFrame(tick);
+  }
+  rafId = requestAnimationFrame(tick);
+}
+function stopScanner(){
+  S.scanning = false;
+  if(rafId) cancelAnimationFrame(rafId);
+  if(mediaStream){ mediaStream.getTracks().forEach(t=>t.stop()); mediaStream=null; }
+  render();
+}
+
+// ---------- login (phone + OTP demo, real data) ----------
+function sendOtp(phoneVal){
+  const phone = normPhone(phoneVal);
+  if(phone.length<9){ toast("أدخل رقم جوال صحيح"); return; }
+  S._phone = phone;
+  S.otpSent = String(Math.floor(1000+Math.random()*9000));
+  S.loginStep = "otp";
+  toast(`تم إرسال الكود إلى ${phone}`);
+  render();
+}
+async function verifyOtp(codeVal){
+  if((codeVal||"").trim() !== S.otpSent){ toast("الكود غير صحيح، حاول مرة أخرى"); return; }
+  const phone = S._phone;
+  let existing = S.customers.find(c=>c.phone===phone);
+  let id;
+  if(existing){
+    id = existing.id;
+  } else {
+    const created = await insertCustomer({ name:"عميل "+phone.slice(-4), phone, code:makeCode(), stamps:0, rewards:0, total_stamps:0 });
+    if(!created) return;
+    S.customers.push(created);
+    id = created.id;
+  }
+  S.session = id;
+  S.selectedId = id;
+  window.storage.set("loyalty-device-session", JSON.stringify({customerId:id}), false).catch(()=>{});
+  toast(existing ? `أهلاً بعودتك ${existing.name}` : "تم إنشاء بطاقتك بنجاح");
+  S.loginStep = "phone";
+  S.otpSent = null;
+  render();
+}
+function logout(){
+  S.session = null;
+  window.storage.delete("loyalty-device-session", false).catch(()=>{});
+  toast("تم تسجيل الخروج من هذا الجهاز");
+}
+
+// ---------- rendering ----------
+function stampGrid(c){
+  let html = '<div class="stampgrid">';
+  for(let i=0;i<THRESHOLD;i++){
+    const filled = i < c.stamps;
+    const isNew = c.id===S.justStampedId && i===c.stamps-1;
+    html += `<div class="slot">`;
+    if(filled){ html += `<div class="stamp ${isNew?'new':''}">☕</div>`; }
+    else{ html += `${i+1}`; }
+    html += `</div>`;
+  }
+  html += '</div>';
+  return html;
+}
+function qrSvg(code){
+  const qr = qrcode(0, 'M');
+  qr.addData(code);
+  qr.make();
+  return qr.createSvgTag({cellSize:5, margin:2});
+}
+function statCard(icon,label,value){
+  return `<div class="stat"><div class="ic">${icon}</div><div><div class="val">${value}</div><div class="lbl">${label}</div></div></div>`;
+}
+
+function render(){
+  if(!S.ready){
+    document.getElementById("app").innerHTML = '<div class="loading">جاري الاتصال بقاعدة البيانات...</div>';
+    return;
+  }
+  const stats = {
+    customerCount: S.customers.length,
+    totalStamps: S.customers.reduce((s,c)=>s+c.total_stamps,0),
+    totalRewards: S.customers.reduce((s,c)=>s+c.rewards,0),
+  };
+  const sel = selected();
+
+  let perf = ""; for(let i=0;i<14;i++) perf += "<span></span>";
+
+  let html = `
+  <div class="header">
+    <div class="title">☕ <span>بُن</span> <span style="font-size:12px;opacity:.7;margin-right:4px;">بطاقة الولاء الرقمية</span></div>
+    <div class="tag">١٠ طوابع = قهوة مجانية · متصل بقاعدة بيانات حقيقية</div>
+    <div class="perf">${perf}</div>
+  </div>
+  <div class="tabs">
+    <button class="tab ${S.view==='cashier'?'active':''}" data-action="setView" data-value="cashier">لوحة الكاشير</button>
+    <button class="tab ${S.view==='customer'?'active':''}" data-action="setView" data-value="customer">بطاقتي (العميل)</button>
+  </div>`;
+
+  if(S.view==="cashier"){
+    html += `<div class="section">
+      <div class="card" style="display:flex;align-items:center;gap:10px;">
+        <span style="font-weight:700;font-size:13px;white-space:nowrap;">🔒 رمز الكاشير:</span>
+        <input id="cashierPinField" type="text" inputmode="numeric" placeholder="أدخل الرمز" style="flex:1;" value="${S.cashierPin}" />
+      </div>
+
+      <div class="stats">
+        ${statCard("👥","العملاء",stats.customerCount)}
+        ${statCard("📈","طوابع موزّعة",stats.totalStamps)}
+        ${statCard("🎁","مكافآت مستبدلة",stats.totalRewards)}
+      </div>
+
+      <div class="card">
+        <div style="font-weight:700;font-size:14px;margin-bottom:8px;">📷 مسح QR بالكاميرا</div>
+        ${S.scanning ? `
+          <div class="scanner-wrap">
+            <video id="scanVideo" muted playsinline></video>
+            <div class="scanner-frame"></div>
+          </div>
+          <div class="row" style="margin-top:8px;">
+            <button class="btn-outline" data-action="stopScan">إيقاف المسح</button>
+          </div>
+        ` : `
+          <div class="row">
+            <button class="btn-dark" data-action="startScan">فتح الكاميرا ومسح QR</button>
+          </div>
+        `}
+        ${S.scanStatus ? `<div class="scan-msg" style="margin-top:8px;">${S.scanStatus}</div>` : ""}
+        <div style="margin-top:10px;font-size:12px;font-weight:700;">أو أدخل الكود يدويًا:</div>
+        <div class="row" style="margin-top:6px;">
+          <input id="scanInputField" type="text" placeholder="كود العميل" style="flex:1;" />
+          <button class="btn-ink" data-action="manualAdd">➕ طابع</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <div style="font-weight:700;font-size:14px;margin-bottom:8px;">اختر عميل لعرض بطاقته</div>
+        ${S.customers.length ? `
+        <select id="custSelect" data-action="selectCustomer" style="width:100%;margin-bottom:10px;">
+          ${S.customers.map(c=>`<option value="${c.id}" ${c.id===S.selectedId?'selected':''}>${c.name} — ${c.code}</option>`).join("")}
+        </select>` : `<p class="muted">لا يوجد عملاء بعد</p>`}
+        <div class="row">
+          <input id="newNameField" type="text" placeholder="اسم عميل جديد" style="flex:1;" />
+          <button class="btn-dark" data-action="addCustomer">إضافة</button>
+        </div>
+      </div>
+
+      ${sel ? `
+      <div class="card">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+          <div>
+            <div style="font-weight:700;">${sel.name}</div>
+            <div class="muted">كود: ${sel.code}</div>
+          </div>
+          <div class="row">
+            <button class="btn-outline" ${sel.stamps===0?'disabled':''} data-action="removeStamp" data-id="${sel.id}">➖</button>
+            ${sel.stamps>=THRESHOLD
+              ? `<button class="btn-gold" data-action="redeem" data-id="${sel.id}">🎁 استبدال المكافأة</button>`
+              : `<button class="btn-ink" data-action="addStamp" data-id="${sel.id}">➕ إضافة طابع</button>`}
+          </div>
+        </div>
+        ${stampGrid(sel)}
+        ${sel.stamps>=THRESHOLD ? `<div style="margin-top:12px;text-align:center;font-weight:700;background:var(--gold);color:#fff;border-radius:8px;padding:8px;">☕ قهوة مجانية جاهزة!</div>` : ""}
+      </div>
+      ` : ""}
+    </div>`;
+  }
+
+  if(S.view==="customer" && !S.session){
+    html += `<div class="section">
+      <div class="card center">
+        ${S.loginStep==="phone" ? `
+          <div style="font-weight:800;font-size:17px;margin-bottom:4px;">سجّل رقمك لعرض بطاقتك</div>
+          <p class="muted">أول مرة؟ بيتم إنشاء بطاقة جديدة تلقائيًا. عميل سابق؟ بترجع لك بطاقتك وطوابعك.</p>
+          <input id="phoneField" type="tel" placeholder="05xxxxxxxx" style="width:100%;margin:10px 0;text-align:center;" />
+          <button class="btn-dark" style="width:100%;" data-action="sendOtp">إرسال كود التحقق</button>
+        ` : `
+          <div style="font-size:24px;">🛡️</div>
+          <div style="font-weight:800;font-size:17px;margin:6px 0 2px;">أدخل كود التحقق</div>
+          <p class="muted">أرسلنا رسالة SMS إلى ${S._phone||""}</p>
+          <p class="code-pill" style="display:inline-block;margin-bottom:10px;">لأغراض العرض فقط — الكود هو: ${S.otpSent}</p>
+          <input id="otpField" type="text" placeholder="كود من 4 أرقام" style="width:100%;text-align:center;letter-spacing:4px;margin-bottom:8px;" />
+          <label class="chk" style="margin-bottom:10px;"><input type="checkbox" id="rememberChk" checked/> تذكرني على هذا الجهاز</label>
+          <button class="btn-ink" style="width:100%;margin-bottom:8px;" data-action="verifyOtp">تحقق ودخول</button>
+          <button class="link-btn" data-action="backToPhone">تغيير الرقم</button>
+        `}
+      </div>
+    </div>`;
+  }
+
+  if(S.view==="customer" && S.session && sel){
+    html += `<div class="section">
+      <div class="card" style="display:flex;justify-content:space-between;align-items:center;padding:12px 16px;">
+        <span class="muted">مسجّل الدخول برقم ${sel.phone||"—"}</span>
+        <button class="link-btn" style="color:var(--ink);font-weight:700;" data-action="logout">🚪 خروج (تجربة رقم آخر)</button>
+      </div>
+      <div class="card center" style="display:flex;flex-direction:column;align-items:center;gap:10px;">
+        <div>
+          <div style="font-weight:800;font-size:17px;">${sel.name}</div>
+          <div class="muted">اعرض هذا الكود للكاشير عند الطلب</div>
+        </div>
+        <div class="qrbox">${qrSvg(sel.code)}</div>
+        <div class="code-pill">${sel.code}</div>
+      </div>
+      <div class="card">
+        <div style="display:flex;justify-content:space-between;margin-bottom:10px;">
+          <span style="font-weight:700;font-size:14px;">☕ طوابعك</span>
+          <span class="muted">${sel.stamps}/${THRESHOLD}</span>
+        </div>
+        ${stampGrid(sel)}
+        ${sel.stamps>=THRESHOLD
+          ? `<div style="margin-top:12px;text-align:center;font-weight:700;background:var(--gold);color:#fff;border-radius:8px;padding:8px;">✨ قهوتك المجانية جاهزة — أرِها للكاشير</div>`
+          : `<p class="muted center" style="margin-top:10px;">باقي ${THRESHOLD-sel.stamps} طوابع لقهوة مجانية</p>`}
+      </div>
+      <div class="stats">${statCard("🎁","مكافآت حصلت عليها",sel.rewards)}</div>
+    </div>`;
+  }
+
+  html += S.toast ? `<div class="toast">✓ ${S.toast}</div>` : "";
+
+  document.getElementById("app").innerHTML = html;
+  bindEvents();
+}
+
+function bindEvents(){
+  const root = document.getElementById("app");
+  const pinField = document.getElementById("cashierPinField");
+  if(pinField){
+    pinField.addEventListener("input", ()=>{
+      S.cashierPin = pinField.value;
+      window.storage.set("loyalty-cashier-pin", S.cashierPin, false).catch(()=>{});
+    });
+  }
+  root.querySelectorAll("[data-action]").forEach(el=>{
+    const action = el.dataset.action;
+    if(el.tagName === "SELECT"){
+      el.addEventListener("change", ()=>{ S.selectedId = el.value; render(); });
+      return;
+    }
+    el.addEventListener("click", ()=>{
+      switch(action){
+        case "setView": S.view = el.dataset.value; render(); break;
+        case "startScan": startScanner(); break;
+        case "stopScan": stopScanner(); break;
+        case "manualAdd": {
+          const v = document.getElementById("scanInputField").value;
+          handleScanCodeInput(v);
+          break;
+        }
+        case "addCustomer": {
+          const v = document.getElementById("newNameField").value;
+          addCustomer(v);
+          break;
+        }
+        case "removeStamp": removeStampFrom(el.dataset.id); break;
+        case "addStamp": addStampTo(el.dataset.id); break;
+        case "redeem": redeemReward(el.dataset.id); break;
+        case "sendOtp": sendOtp(document.getElementById("phoneField").value); break;
+        case "verifyOtp": {
+          verifyOtp(document.getElementById("otpField").value);
+          break;
+        }
+        case "backToPhone": S.loginStep="phone"; S.otpSent=null; render(); break;
+        case "logout": logout(); render(); break;
+      }
+    });
+  });
+}
+
+// ---------- boot ----------
+async function boot(){
+  try{
+    const res = await window.storage.get("loyalty-device-session", false);
+    if(res && res.value){
+      const parsed = JSON.parse(res.value);
+      if(parsed.customerId) S.session = parsed.customerId;
+    }
+  }catch(e){}
+  try{
+    const pinRes = await window.storage.get("loyalty-cashier-pin", false);
+    if(pinRes && pinRes.value) S.cashierPin = pinRes.value;
+  }catch(e){}
+  S.ready = true;
+  await loadCustomers();
+  if(S.session) S.selectedId = S.session;
+  render();
+}
+
+window.addEventListener("supabase-ready", boot);
+</script>
+</body>
+</html>
