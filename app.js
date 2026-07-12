@@ -21,6 +21,7 @@ let S = {
   scanStatus: "",
   justStampedId: null,
   showIconPicker: false,
+  uploadingLogo: false,
 
   // customer-side
   cafeSlug: null,
@@ -95,6 +96,27 @@ async function updateStampIcon(icon){
   S.cafe = data;
   S.showIconPicker = false;
   toast("تم تحديث شكل الطابع ✓");
+  render();
+}
+
+async function uploadLogo(file){
+  if(!file || !S.cafe) return;
+  S.uploadingLogo = true;
+  render();
+  try{
+    const ext = (file.name.split(".").pop() || "png").toLowerCase();
+    const path = `${S.cafe.id}-${Date.now()}.${ext}`;
+    const { error: upErr } = await window.supabase.storage.from("logos").upload(path, file, { upsert: true });
+    if(upErr){ toast("خطأ برفع الصورة: " + upErr.message); S.uploadingLogo=false; render(); return; }
+    const { data: pub } = window.supabase.storage.from("logos").getPublicUrl(path);
+    const { data, error } = await window.supabase.rpc("update_my_cafe_logo", { p_logo_url: pub.publicUrl });
+    if(error){ toast("خطأ بالحفظ: " + error.message); S.uploadingLogo=false; render(); return; }
+    S.cafe = data;
+    toast("تم رفع الشعار بنجاح ✓");
+  }catch(err){
+    toast("حدث خطأ غير متوقع أثناء الرفع");
+  }
+  S.uploadingLogo = false;
   render();
 }
 
@@ -350,9 +372,12 @@ function render(){
 
   if(S.view === "cashier"){
     const headerLabel = S.cafe ? `لوحة الكاشير — ${S.cafe.name}` : "لوحة الكاشير";
+    const headerIcon = (S.cafe && S.cafe.logo_url)
+      ? `<img src="${S.cafe.logo_url}" alt="" style="width:28px;height:28px;border-radius:6px;object-fit:cover;" />`
+      : "☕";
     html += `
     <div class="header">
-      <div class="title">☕ <span>بُن</span> <span style="font-size:12px;opacity:.7;margin-right:4px;">${headerLabel}</span></div>
+      <div class="title">${headerIcon} <span>بُن</span> <span style="font-size:12px;opacity:.7;margin-right:4px;">${headerLabel}</span></div>
       <div class="tag">١٠ طوابع = قهوة مجانية</div>
       <div class="perf">${perf}</div>
     </div>`;
@@ -401,6 +426,18 @@ function render(){
           <div class="row" style="flex-wrap:wrap;margin-top:10px;">
             ${ICON_CHOICES.map(ic=>`<button class="btn-outline" data-action="setIcon" data-icon="${ic}" style="font-size:18px;padding:6px 10px;">${ic}</button>`).join("")}
           </div>` : ""}
+        </div>
+
+        <div class="card">
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;">
+            <div style="display:flex;align-items:center;gap:8px;">
+              ${S.cafe && S.cafe.logo_url ? `<img src="${S.cafe.logo_url}" alt="" style="width:36px;height:36px;border-radius:8px;object-fit:cover;" />` : `<span class="muted">لا يوجد شعار بعد</span>`}
+            </div>
+            <label class="btn-outline" style="cursor:pointer;">
+              ${S.uploadingLogo ? "جاري الرفع..." : "📤 رفع شعار"}
+              <input id="logoFileField" type="file" accept="image/*" style="display:none;" data-action-change="uploadLogo" />
+            </label>
+          </div>
         </div>
 
         <div class="stats">
@@ -471,9 +508,12 @@ function render(){
 
   if(S.view === "customer"){
     const headerLabel = S.customerCafe ? S.customerCafe.name : "بطاقة الولاء الرقمية";
+    const headerIcon = (S.customerCafe && S.customerCafe.logo_url)
+      ? `<img src="${S.customerCafe.logo_url}" alt="" style="width:28px;height:28px;border-radius:6px;object-fit:cover;" />`
+      : "☕";
     html += `
     <div class="header">
-      <div class="title">☕ <span>بُن</span> <span style="font-size:12px;opacity:.7;margin-right:4px;">${headerLabel}</span></div>
+      <div class="title">${headerIcon} <span>بُن</span> <span style="font-size:12px;opacity:.7;margin-right:4px;">${headerLabel}</span></div>
       <div class="tag">١٠ طوابع = قهوة مجانية</div>
       <div class="perf">${perf}</div>
     </div>`;
@@ -541,6 +581,12 @@ function render(){
 
 function bindEvents(){
   const root = document.getElementById("app");
+  const logoField = document.getElementById("logoFileField");
+  if(logoField){
+    logoField.addEventListener("change", ()=>{
+      if(logoField.files && logoField.files[0]) uploadLogo(logoField.files[0]);
+    });
+  }
   root.querySelectorAll("[data-action]").forEach(el=>{
     const action = el.dataset.action;
     if(el.tagName === "SELECT"){
