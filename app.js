@@ -411,11 +411,22 @@ function render(){
       };
       const sel = selectedCustomer();
       const myIcon = (S.cafe && S.cafe.stamp_icon) || "☕";
+      const customerLink = S.cafe ? `${window.location.origin}/index.html?cafe=${S.cafe.slug}` : "";
       html += `<div class="section">
         <div class="card" style="display:flex;justify-content:space-between;align-items:center;">
           <span class="muted">${S.cafe ? "تدير: " + S.cafe.name : "حسابك غير مرتبط بفرع"}</span>
           <button class="link-btn" style="color:var(--ink);font-weight:700;" data-action="cashierLogout">🚪 خروج</button>
         </div>
+
+        ${S.cafe ? `
+        <div class="card center">
+          <div style="font-weight:700;font-size:14px;margin-bottom:10px;">🔗 رابط وباركود عملاء "${S.cafe.name}"</div>
+          <div class="qrbox">${qrSvg(customerLink)}</div>
+          <div style="margin-top:10px;font-size:11px;word-break:break-all;color:var(--textMuted);">${customerLink}</div>
+          <button class="btn-dark" style="width:100%;margin-top:10px;" data-action="copyCustomerLink" data-link="${customerLink}">📋 نسخ الرابط</button>
+          <p class="muted" style="margin-top:8px;">اطبع هذا الباركود وحطه على طاولاتك — كل عميل يمسحه يسجّل ببطاقة فرعك تحديدًا.</p>
+        </div>
+        ` : ""}
 
         <div class="card">
           <div style="display:flex;justify-content:space-between;align-items:center;">
@@ -639,6 +650,15 @@ function bindEvents(){
         case "addStamp": addStampTo(el.dataset.id); break;
         case "redeem": redeemReward(el.dataset.id); break;
         case "refreshList": loadMyCafeCustomers().then(()=>toast("تم تحديث القائمة")); break;
+        case "copyCustomerLink": {
+          const link = el.dataset.link;
+          if(navigator.clipboard && link){
+            navigator.clipboard.writeText(link).then(()=>toast("تم نسخ الرابط ✓")).catch(()=>toast("تعذّر النسخ، انسخه يدويًا من النص أدناه"));
+          } else {
+            toast("انسخ الرابط يدويًا من النص أدناه");
+          }
+          break;
+        }
         case "sendOtp": sendOtp(document.getElementById("phoneField").value); break;
         case "verifyOtp": verifyOtp(document.getElementById("otpField").value); break;
         case "backToPhone": S.loginStep="phone"; S.otpSent=null; render(); break;

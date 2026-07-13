@@ -40,7 +40,7 @@
   .stat .ic{background:var(--espresso);color:var(--kraft);border-radius:50%;width:32px;height:32px;display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0;}
   .stat .val{font-size:17px;font-weight:800;}
   .stat .lbl{font-size:11px;color:var(--textMuted);}
-  input[type=text],input[type=tel]{border:1px solid var(--kraftDark);background:#fff;border-radius:8px;padding:9px 12px;font-size:14px;outline:none;font-family:inherit;}
+  input[type=text],input[type=tel],input[type=password]{border:1px solid var(--kraftDark);background:#fff;border-radius:8px;padding:9px 12px;font-size:14px;outline:none;font-family:inherit;}
   select{border:1px solid var(--kraftDark);background:#fff;border-radius:8px;padding:9px 12px;font-size:14px;font-family:inherit;}
   button{font-family:inherit;cursor:pointer;border:none;}
   button:disabled{opacity:.5;cursor:not-allowed;}
@@ -61,6 +61,9 @@
   .scanner-wrap video{width:100%;display:block;}
   .scanner-frame{position:absolute;inset:15%;border:2px solid var(--gold);border-radius:12px;pointer-events:none;}
   .scan-msg{background:var(--paper);border:1px solid var(--kraftDark);border-radius:10px;padding:10px 12px;font-size:12px;color:var(--textMuted);}
+  .qrbox{background:#fff;border:3px solid var(--espresso);border-radius:8px;padding:10px;display:inline-flex;}
+  .qrbox svg{display:block;}
+  .code-pill{font-family:ui-monospace,monospace;letter-spacing:2px;background:var(--kraft);color:var(--espresso);padding:4px 12px;border-radius:6px;font-size:12px;}
   .loading{padding:40px 20px;text-align:center;color:var(--textMuted);}
 </style>
 </head>
