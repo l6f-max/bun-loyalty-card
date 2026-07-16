@@ -15,6 +15,7 @@
   // ==========================================
 
   window.supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
+  window.SUPABASE_URL = SUPABASE_URL;
   window.dispatchEvent(new Event("supabase-ready"));
 </script>
 <script>window.FIXED_VIEW = "cashier";</script>
