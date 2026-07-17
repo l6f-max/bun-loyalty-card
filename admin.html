@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>طوابع — لوحة الإدارة</title>
+<script type="module">
+  import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
+
+  const SUPABASE_URL = "https://zyujtsvxxeopdoplbabh.supabase.co";
+  const SUPABASE_KEY = "sb_publishable_P9KdoAMpdghZcMQAjopfpA_jj01ulZi";
+
+  window.supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
+  window.SUPABASE_URL = SUPABASE_URL;
+  window.dispatchEvent(new Event("supabase-ready"));
+</script>
+<script>window.FIXED_VIEW = "admin";</script>
+<style>
+  :root{
+    --kraft:#E7D9BE; --kraftDark:#CBB68C; --paper:#F3EAD6;
+    --espresso:#2C1D14; --ink:#9C3B2A; --gold:#B4841F;
+    --textDark:#2B1D14; --textMuted:#7A6A52;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--kraft);font-family:'Segoe UI',Tahoma,system-ui,sans-serif;color:var(--textDark);}
+  #app{max-width:480px;margin:0 auto;padding-bottom:40px;}
+  .header{background:var(--espresso);color:var(--kraft);padding:24px 20px 20px;position:relative;}
+  .header .title{display:flex;align-items:center;gap:8px;font-size:20px;font-weight:800;}
+  .header .tag{font-size:12px;opacity:.7;margin-top:2px;}
+  .perf{position:absolute;left:0;right:0;bottom:0;display:flex;justify-content:space-around;transform:translateY(50%);}
+  .perf span{width:10px;height:10px;border-radius:50%;background:var(--kraft);display:block;}
+  .section{padding:20px 20px 20px;display:flex;flex-direction:column;gap:14px;}
+  .card{background:var(--paper);border:1px solid var(--kraftDark);border-radius:12px;padding:16px;}
+  .row{display:flex;gap:8px;}
+  input[type=text],input[type=password],input[type=number]{border:1px solid var(--kraftDark);background:#fff;border-radius:8px;padding:9px 12px;font-size:14px;outline:none;font-family:inherit;}
+  button{font-family:inherit;cursor:pointer;border:none;}
+  button:disabled{opacity:.5;cursor:not-allowed;}
+  .btn-dark{background:var(--espresso);color:var(--kraft);border-radius:8px;padding:9px 14px;font-size:13px;font-weight:700;}
+  .btn-outline{background:var(--paper);color:var(--ink);border:1px solid var(--ink);border-radius:8px;padding:7px 10px;font-size:12px;font-weight:700;}
+  .toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--espresso);color:var(--kraft);padding:9px 16px;border-radius:999px;font-size:13px;font-weight:700;box-shadow:0 6px 20px rgba(0,0,0,.25);z-index:50;}
+  .center{text-align:center;}
+  .muted{color:var(--textMuted);font-size:12px;}
+  .link-btn{background:none;border:none;text-decoration:underline;font-size:12px;color:var(--textMuted);padding:0;}
+  .loading{padding:40px 20px;text-align:center;color:var(--textMuted);}
+</style>
+</head>
+<body>
+<div id="app"><div class="loading">جاري الاتصال بقاعدة البيانات...</div></div>
+<script src="app.js"></script>
+</body>
+</html>
