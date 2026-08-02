@@ -384,39 +384,76 @@ async function handleScanCodeInput(codeStr){
 }
 
 // ---------- camera QR scanner ----------
-async function startScanner(){
-  S.scanStatus = "";
-  render();
+function loadScriptOnce(src){
+  return new Promise((resolve, reject)=>{
+    const s = document.createElement("script");
+    s.src = src;
+    s.onload = () => resolve(true);
+    s.onerror = () => reject(new Error("failed to load " + src));
+    document.head.appendChild(s);
+  });
+}
+async function ensureJsQR(){
+  if(window.jsQR) return true;
+  // المكتبة ما تحمّلت من المصدر الأساسي (cdnjs) — نجرب مصدر بديل (jsDelivr) قبل ما نستسلم
   try{
-    mediaStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
+    await loadScriptOnce("https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js");
+  }catch(e){ /* تجاهل، بنتحقق تحت */ }
+  return !!window.jsQR;
+}
+async function startScanner(){
+  S.scanStatus = "جاري تجهيز قارئ الباركود...";
+  render();
+
+  const jsQrReady = await ensureJsQR();
+  if(!jsQrReady){
+    S.scanStatus = "تعذّر تحميل مكتبة قراءة الباركود (تحقق من اتصال الإنترنت) — جرّب إدخال الكود يدويًا بالأسفل.";
+    S.scanning = false;
+    render();
+    return;
+  }
+
+  try{
+    mediaStream = await navigator.mediaDevices.getUserMedia({
+      video: { facingMode: { ideal: "environment" }, width: { ideal: 1280 }, height: { ideal: 720 } }
+    });
   }catch(err){
     S.scanStatus = "تعذّر فتح الكاميرا (قد تكون الصلاحية مرفوضة، أو أن هذه المعاينة لا تسمح بالوصول للكاميرا).";
     S.scanning = false;
     render();
     return;
   }
+  S.scanStatus = "";
   S.scanning = true;
   render();
   const video = document.getElementById("scanVideo");
   video.srcObject = mediaStream;
   await video.play();
   const canvas = document.createElement("canvas");
-  const ctx = canvas.getContext("2d");
+  const ctx = canvas.getContext("2d", { willReadFrequently: true });
+  let noScanTicks = 0;
   function tick(){
     if(!S.scanning) return;
-    if(video.readyState === video.HAVE_ENOUGH_DATA){
-      canvas.width = video.videoWidth;
-      canvas.height = video.videoHeight;
-      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-      const imageData = ctx.getImageData(0,0,canvas.width,canvas.height);
-      const code = window.jsQR ? jsQR(imageData.data, imageData.width, imageData.height) : null;
-      const now = Date.now();
-      if(code && code.data && now - lastScanTime > 1800){
-        lastScanTime = now;
-        stopScanner();
-        handleScanCodeInput(code.data);
-        return;
+    try{
+      if(video.readyState === video.HAVE_ENOUGH_DATA && video.videoWidth > 0){
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+        const imageData = ctx.getImageData(0,0,canvas.width,canvas.height);
+        const code = jsQR(imageData.data, imageData.width, imageData.height, { inversionAttempts: "attemptBoth" });
+        const now = Date.now();
+        if(code && code.data && now - lastScanTime > 1800){
+          lastScanTime = now;
+          stopScanner();
+          handleScanCodeInput(code.data);
+          return;
+        }
+        noScanTicks = 0;
       }
+    }catch(e){
+      // ما نكسر الحلقة بصمت — نحاول مرة ثانية بالفريم الجاي
+      noScanTicks++;
+      if(noScanTicks === 1) console.error("QR scan tick error:", e);
     }
     rafId = requestAnimationFrame(tick);
   }
